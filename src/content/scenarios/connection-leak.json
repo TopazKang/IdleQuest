@@ -1,0 +1,178 @@
+{
+  "id": "connection-leak",
+  "version": 1,
+  "title": "Checkout Pool Exhaustion",
+  "description": "Checkout requests time out. Instances are healthy, but active DB connections are at the configured limit.",
+  "category": "BACKEND",
+  "difficulty": 2,
+  "estimatedMinutes": 8,
+  "skills": [
+    "BACKEND",
+    "DATABASE",
+    "SPRING"
+  ],
+  "environment": [
+    "Spring Boot",
+    "MySQL"
+  ],
+  "startNode": "triage",
+  "nodes": [
+    {
+      "id": "triage",
+      "text": "Checkout requests time out. Instances are healthy, but active DB connections are at the configured limit.",
+      "observations": [
+        "Production impact is active.",
+        "Monitoring data is incomplete."
+      ],
+      "actions": [
+        {
+          "id": "investigate",
+          "label": "Inspect pool metrics",
+          "type": "INVESTIGATE",
+          "nextNode": "evidence",
+          "result": "Active connections climb after each payment-provider timeout; idle connections never recover.",
+          "effect": {
+            "minutes": 2,
+            "flags": {
+              "primaryEvidence": true
+            }
+          },
+          "score": {
+            "diagnosis": 15,
+            "efficiency": 8
+          }
+        },
+        {
+          "id": "risky",
+          "label": "Increase pool size",
+          "type": "CHANGE",
+          "nextNode": "after-risk",
+          "result": "Timeouts pause, then the larger pool saturates and database memory pressure rises.",
+          "effect": {
+            "minutes": 4,
+            "impact": {
+              "affectedUsers": 17
+            }
+          },
+          "score": {
+            "safety": -25,
+            "efficiency": -12
+          }
+        }
+      ]
+    },
+    {
+      "id": "after-risk",
+      "text": "The incident continues. Temporary relief did not address the underlying cause.",
+      "observations": [
+        "Timeouts pause, then the larger pool saturates and database memory pressure rises.",
+        "The team still needs a diagnosis."
+      ],
+      "actions": [
+        {
+          "id": "recover-investigate",
+          "label": "Inspect pool metrics",
+          "type": "INVESTIGATE",
+          "nextNode": "evidence",
+          "result": "Active connections climb after each payment-provider timeout; idle connections never recover.",
+          "effect": {
+            "minutes": 3
+          },
+          "score": {
+            "diagnosis": 10
+          }
+        }
+      ]
+    },
+    {
+      "id": "evidence",
+      "text": "The first evidence narrows the fault domain.",
+      "observations": [
+        "Active connections climb after each payment-provider timeout; idle connections never recover."
+      ],
+      "actions": [
+        {
+          "id": "deeper",
+          "label": "Trace timeout path",
+          "type": "INVESTIGATE",
+          "nextNode": "cause",
+          "result": "A missing finally/try-with-resources path leaves connections checked out.",
+          "effect": {
+            "minutes": 2,
+            "flags": {
+              "causeIdentified": true
+            }
+          },
+          "score": {
+            "diagnosis": 20,
+            "understanding": 25
+          }
+        },
+        {
+          "id": "guess-fix",
+          "label": "Patch resource cleanup without verification",
+          "type": "CHANGE",
+          "nextNode": "failed",
+          "result": "The unverified change creates risk and the incident is escalated after the recovery window expires.",
+          "effect": {
+            "minutes": 8
+          },
+          "score": {
+            "safety": -30,
+            "understanding": -15
+          }
+        }
+      ]
+    },
+    {
+      "id": "cause",
+      "text": "Evidence now supports a specific root cause.",
+      "observations": [
+        "A missing finally/try-with-resources path leaves connections checked out."
+      ],
+      "actions": [
+        {
+          "id": "fix",
+          "label": "Patch resource cleanup",
+          "type": "MITIGATE",
+          "nextNode": "resolved",
+          "result": "The guarded cleanup is deployed. Pool usage returns to baseline and checkout recovers.",
+          "effect": {
+            "minutes": 3
+          },
+          "score": {
+            "safety": 15,
+            "efficiency": 12,
+            "understanding": 25
+          }
+        }
+      ]
+    },
+    {
+      "id": "resolved",
+      "text": "Service indicators remain healthy through the observation window.",
+      "observations": [
+        "The guarded cleanup is deployed. Pool usage returns to baseline and checkout recovers."
+      ],
+      "actions": [],
+      "terminal": "RESOLVED"
+    },
+    {
+      "id": "failed",
+      "text": "The response window closes with customer impact unresolved.",
+      "observations": [
+        "The incident is handed to the next response team."
+      ],
+      "actions": [],
+      "terminal": "FAILED"
+    }
+  ],
+  "rootCause": "An exception path failed to close database connections, steadily exhausting the HikariCP pool.",
+  "review": {
+    "explanation": "An exception path failed to close database connections, steadily exhausting the HikariCP pool.",
+    "learningNotes": [
+      "Use evidence to narrow the fault domain before changing production.",
+      "Temporary symptom relief is not the same as removing a root cause."
+    ]
+  }
+}

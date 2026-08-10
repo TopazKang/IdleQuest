@@ -1,0 +1,178 @@
+{
+  "id": "missing-index",
+  "version": 1,
+  "title": "Slow Order API",
+  "description": "Order API latency rose from 180 ms to 4.2 s. Error rate is stable and there was no deploy.",
+  "category": "DATABASE",
+  "difficulty": 2,
+  "estimatedMinutes": 8,
+  "skills": [
+    "SQL",
+    "DATABASE",
+    "TROUBLESHOOTING"
+  ],
+  "environment": [
+    "Spring Boot",
+    "PostgreSQL"
+  ],
+  "startNode": "triage",
+  "nodes": [
+    {
+      "id": "triage",
+      "text": "Order API latency rose from 180 ms to 4.2 s. Error rate is stable and there was no deploy.",
+      "observations": [
+        "Production impact is active.",
+        "Monitoring data is incomplete."
+      ],
+      "actions": [
+        {
+          "id": "investigate",
+          "label": "Inspect slow queries",
+          "type": "INVESTIGATE",
+          "nextNode": "evidence",
+          "result": "One SELECT averages 3.8 seconds and accounts for most database time.",
+          "effect": {
+            "minutes": 2,
+            "flags": {
+              "primaryEvidence": true
+            }
+          },
+          "score": {
+            "diagnosis": 15,
+            "efficiency": 8
+          }
+        },
+        {
+          "id": "risky",
+          "label": "Restart application",
+          "type": "CHANGE",
+          "nextNode": "after-risk",
+          "result": "Queues clear and latency drops briefly. Four minutes later it reaches 5.1 s; 17 sessions were disconnected.",
+          "effect": {
+            "minutes": 4,
+            "impact": {
+              "affectedUsers": 17
+            }
+          },
+          "score": {
+            "safety": -25,
+            "efficiency": -12
+          }
+        }
+      ]
+    },
+    {
+      "id": "after-risk",
+      "text": "The incident continues. Temporary relief did not address the underlying cause.",
+      "observations": [
+        "Queues clear and latency drops briefly. Four minutes later it reaches 5.1 s; 17 sessions were disconnected.",
+        "The team still needs a diagnosis."
+      ],
+      "actions": [
+        {
+          "id": "recover-investigate",
+          "label": "Inspect slow queries",
+          "type": "INVESTIGATE",
+          "nextNode": "evidence",
+          "result": "One SELECT averages 3.8 seconds and accounts for most database time.",
+          "effect": {
+            "minutes": 3
+          },
+          "score": {
+            "diagnosis": 10
+          }
+        }
+      ]
+    },
+    {
+      "id": "evidence",
+      "text": "The first evidence narrows the fault domain.",
+      "observations": [
+        "One SELECT averages 3.8 seconds and accounts for most database time."
+      ],
+      "actions": [
+        {
+          "id": "deeper",
+          "label": "Examine execution plan",
+          "type": "INVESTIGATE",
+          "nextNode": "cause",
+          "result": "The plan shows a full scan of ORDER_ITEM; estimated and actual rows diverge sharply.",
+          "effect": {
+            "minutes": 2,
+            "flags": {
+              "causeIdentified": true
+            }
+          },
+          "score": {
+            "diagnosis": 20,
+            "understanding": 25
+          }
+        },
+        {
+          "id": "guess-fix",
+          "label": "Create the reviewed index without verification",
+          "type": "CHANGE",
+          "nextNode": "failed",
+          "result": "The unverified change creates risk and the incident is escalated after the recovery window expires.",
+          "effect": {
+            "minutes": 8
+          },
+          "score": {
+            "safety": -30,
+            "understanding": -15
+          }
+        }
+      ]
+    },
+    {
+      "id": "cause",
+      "text": "Evidence now supports a specific root cause.",
+      "observations": [
+        "The plan shows a full scan of ORDER_ITEM; estimated and actual rows diverge sharply."
+      ],
+      "actions": [
+        {
+          "id": "fix",
+          "label": "Create the reviewed index",
+          "type": "MITIGATE",
+          "nextNode": "resolved",
+          "result": "The online index build completes. Latency settles at 190 ms without errors.",
+          "effect": {
+            "minutes": 3
+          },
+          "score": {
+            "safety": 15,
+            "efficiency": 12,
+            "understanding": 25
+          }
+        }
+      ]
+    },
+    {
+      "id": "resolved",
+      "text": "Service indicators remain healthy through the observation window.",
+      "observations": [
+        "The online index build completes. Latency settles at 190 ms without errors."
+      ],
+      "actions": [],
+      "terminal": "RESOLVED"
+    },
+    {
+      "id": "failed",
+      "text": "The response window closes with customer impact unresolved.",
+      "observations": [
+        "The incident is handed to the next response team."
+      ],
+      "actions": [],
+      "terminal": "FAILED"
+    }
+  ],
+  "rootCause": "An unusable index on ORDER_ITEM.ORDER_ID caused full table scans as data grew.",
+  "review": {
+    "explanation": "An unusable index on ORDER_ITEM.ORDER_ID caused full table scans as data grew.",
+    "learningNotes": [
+      "Use evidence to narrow the fault domain before changing production.",
+      "Temporary symptom relief is not the same as removing a root cause."
+    ]
+  }
+}

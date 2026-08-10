@@ -1,0 +1,1 @@
+import a from './scenarios/missing-index.json';import b from './scenarios/connection-leak.json';import c from './scenarios/disk-restart.json';import d from './scenarios/nginx-502.json';import e from './scenarios/duplicate-orders.json';import {validateScenarios} from '@/game/validation';export const scenarios=validateScenarios([a,b,c,d,e]);
