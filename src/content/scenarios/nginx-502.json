@@ -1,8 +1,8 @@
 {
   "id": "nginx-502",
   "version": 1,
-  "title": "Gateway 502 Burst",
-  "description": "Nginx returns 502 for profile requests. Static assets and other APIs remain healthy.",
+  "title": "게이트웨이 502 급증",
+  "description": "프로필 요청에서 Nginx 502가 발생합니다. 정적 자산과 다른 API는 정상입니다.",
   "category": "NETWORK",
   "difficulty": 2,
   "estimatedMinutes": 8,
@@ -19,18 +19,18 @@
   "nodes": [
     {
       "id": "triage",
-      "text": "Nginx returns 502 for profile requests. Static assets and other APIs remain healthy.",
+      "text": "프로필 요청에서 Nginx 502가 발생합니다. 정적 자산과 다른 API는 정상입니다.",
       "observations": [
-        "Production impact is active.",
-        "Monitoring data is incomplete."
+        "현재 운영 환경에 사용자 영향이 발생하고 있습니다.",
+        "모니터링 데이터가 완전하지 않습니다."
       ],
       "actions": [
         {
           "id": "investigate",
-          "label": "Inspect gateway errors",
+          "label": "게이트웨이 오류 확인",
           "type": "INVESTIGATE",
           "nextNode": "evidence",
-          "result": "Nginx reports connection refused to profile-api:3000.",
+          "result": "Nginx 로그에 profile-api:3000 연결 거부가 기록됩니다.",
           "effect": {
             "minutes": 2,
             "flags": {
@@ -44,10 +44,10 @@
         },
         {
           "id": "risky",
-          "label": "Raise proxy timeout",
+          "label": "프록시 타임아웃 증가",
           "type": "CHANGE",
           "nextNode": "after-risk",
-          "result": "Requests wait longer but still end in 502; the outage duration increases.",
+          "result": "요청 대기 시간만 길어지고 결국 502로 끝납니다. 장애 지속 시간이 늘어났습니다.",
           "effect": {
             "minutes": 4,
             "impact": {
@@ -63,18 +63,18 @@
     },
     {
       "id": "after-risk",
-      "text": "The incident continues. Temporary relief did not address the underlying cause.",
+      "text": "인시던트가 계속되고 있습니다. 일시적인 완화로 근본 원인은 해결되지 않았습니다.",
       "observations": [
-        "Requests wait longer but still end in 502; the outage duration increases.",
-        "The team still needs a diagnosis."
+        "요청 대기 시간만 길어지고 결국 502로 끝납니다. 장애 지속 시간이 늘어났습니다.",
+        "팀은 여전히 원인을 진단해야 합니다."
       ],
       "actions": [
         {
           "id": "recover-investigate",
-          "label": "Inspect gateway errors",
+          "label": "게이트웨이 오류 확인",
           "type": "INVESTIGATE",
           "nextNode": "evidence",
-          "result": "Nginx reports connection refused to profile-api:3000.",
+          "result": "Nginx 로그에 profile-api:3000 연결 거부가 기록됩니다.",
           "effect": {
             "minutes": 3
           },
@@ -86,17 +86,17 @@
     },
     {
       "id": "evidence",
-      "text": "The first evidence narrows the fault domain.",
+      "text": "첫 번째 증거로 장애 범위가 좁혀졌습니다.",
       "observations": [
-        "Nginx reports connection refused to profile-api:3000."
+        "Nginx 로그에 profile-api:3000 연결 거부가 기록됩니다."
       ],
       "actions": [
         {
           "id": "deeper",
-          "label": "Check upstream reachability",
+          "label": "업스트림 연결 상태 확인",
           "type": "INVESTIGATE",
           "nextNode": "cause",
-          "result": "The process is healthy but listens on 127.0.0.1 rather than 0.0.0.0.",
+          "result": "프로세스는 정상이지만 0.0.0.0이 아닌 127.0.0.1에서만 수신하고 있습니다.",
           "effect": {
             "minutes": 2,
             "flags": {
@@ -110,10 +110,10 @@
         },
         {
           "id": "guess-fix",
-          "label": "Correct bind address without verification",
+          "label": "검증 없이 바인드 주소 수정",
           "type": "CHANGE",
           "nextNode": "failed",
-          "result": "The unverified change creates risk and the incident is escalated after the recovery window expires.",
+          "result": "검증되지 않은 변경으로 위험이 커졌고 복구 가능 시간이 지나 인시던트가 에스컬레이션됩니다.",
           "effect": {
             "minutes": 8
           },
@@ -126,17 +126,17 @@
     },
     {
       "id": "cause",
-      "text": "Evidence now supports a specific root cause.",
+      "text": "수집한 증거가 구체적인 근본 원인을 가리킵니다.",
       "observations": [
-        "The process is healthy but listens on 127.0.0.1 rather than 0.0.0.0."
+        "프로세스는 정상이지만 0.0.0.0이 아닌 127.0.0.1에서만 수신하고 있습니다."
       ],
       "actions": [
         {
           "id": "fix",
-          "label": "Correct bind address",
+          "label": "바인드 주소 수정",
           "type": "MITIGATE",
           "nextNode": "resolved",
-          "result": "The upstream becomes reachable and 502 responses stop.",
+          "result": "업스트림 연결이 복구되어 502 응답이 멈췄습니다.",
           "effect": {
             "minutes": 3
           },
@@ -150,29 +150,29 @@
     },
     {
       "id": "resolved",
-      "text": "Service indicators remain healthy through the observation window.",
+      "text": "관찰 시간 동안 서비스 지표가 정상 상태를 유지합니다.",
       "observations": [
-        "The upstream becomes reachable and 502 responses stop."
+        "업스트림 연결이 복구되어 502 응답이 멈췄습니다."
       ],
       "actions": [],
       "terminal": "RESOLVED"
     },
     {
       "id": "failed",
-      "text": "The response window closes with customer impact unresolved.",
+      "text": "사용자 영향을 해결하지 못한 채 대응 시간이 종료됩니다.",
       "observations": [
-        "The incident is handed to the next response team."
+        "인시던트가 다음 대응 팀으로 인계됩니다."
       ],
       "actions": [],
       "terminal": "FAILED"
     }
   ],
-  "rootCause": "The profile upstream bound only to localhost after a configuration change, so Nginx could not connect over the container network.",
+  "rootCause": "설정 변경 후 프로필 업스트림이 localhost에만 바인딩되어 Nginx가 컨테이너 네트워크를 통해 연결할 수 없었습니다.",
   "review": {
-    "explanation": "The profile upstream bound only to localhost after a configuration change, so Nginx could not connect over the container network.",
+    "explanation": "설정 변경 후 프로필 업스트림이 localhost에만 바인딩되어 Nginx가 컨테이너 네트워크를 통해 연결할 수 없었습니다.",
     "learningNotes": [
-      "Use evidence to narrow the fault domain before changing production.",
-      "Temporary symptom relief is not the same as removing a root cause."
+      "운영 환경을 변경하기 전에 증거를 통해 장애 범위를 좁히세요.",
+      "일시적인 증상 완화와 근본 원인 제거는 다릅니다."
     ]
   }
 }

@@ -1,8 +1,8 @@
 {
   "id": "connection-leak",
   "version": 1,
-  "title": "Checkout Pool Exhaustion",
-  "description": "Checkout requests time out. Instances are healthy, but active DB connections are at the configured limit.",
+  "title": "결제 DB 커넥션 풀 고갈",
+  "description": "결제 요청이 타임아웃됩니다. 인스턴스는 정상이지만 활성 DB 연결 수가 설정 한도에 도달했습니다.",
   "category": "BACKEND",
   "difficulty": 2,
   "estimatedMinutes": 8,
@@ -19,18 +19,18 @@
   "nodes": [
     {
       "id": "triage",
-      "text": "Checkout requests time out. Instances are healthy, but active DB connections are at the configured limit.",
+      "text": "결제 요청이 타임아웃됩니다. 인스턴스는 정상이지만 활성 DB 연결 수가 설정 한도에 도달했습니다.",
       "observations": [
-        "Production impact is active.",
-        "Monitoring data is incomplete."
+        "현재 운영 환경에 사용자 영향이 발생하고 있습니다.",
+        "모니터링 데이터가 완전하지 않습니다."
       ],
       "actions": [
         {
           "id": "investigate",
-          "label": "Inspect pool metrics",
+          "label": "커넥션 풀 지표 확인",
           "type": "INVESTIGATE",
           "nextNode": "evidence",
-          "result": "Active connections climb after each payment-provider timeout; idle connections never recover.",
+          "result": "결제 제공자 타임아웃이 발생할 때마다 활성 연결이 증가하고 유휴 연결은 회복되지 않습니다.",
           "effect": {
             "minutes": 2,
             "flags": {
@@ -44,10 +44,10 @@
         },
         {
           "id": "risky",
-          "label": "Increase pool size",
+          "label": "커넥션 풀 크기 증가",
           "type": "CHANGE",
           "nextNode": "after-risk",
-          "result": "Timeouts pause, then the larger pool saturates and database memory pressure rises.",
+          "result": "타임아웃이 잠시 멈췄지만 더 커진 풀도 곧 고갈되고 데이터베이스 메모리 압력이 상승합니다.",
           "effect": {
             "minutes": 4,
             "impact": {
@@ -63,18 +63,18 @@
     },
     {
       "id": "after-risk",
-      "text": "The incident continues. Temporary relief did not address the underlying cause.",
+      "text": "인시던트가 계속되고 있습니다. 일시적인 완화로 근본 원인은 해결되지 않았습니다.",
       "observations": [
-        "Timeouts pause, then the larger pool saturates and database memory pressure rises.",
-        "The team still needs a diagnosis."
+        "타임아웃이 잠시 멈췄지만 더 커진 풀도 곧 고갈되고 데이터베이스 메모리 압력이 상승합니다.",
+        "팀은 여전히 원인을 진단해야 합니다."
       ],
       "actions": [
         {
           "id": "recover-investigate",
-          "label": "Inspect pool metrics",
+          "label": "커넥션 풀 지표 확인",
           "type": "INVESTIGATE",
           "nextNode": "evidence",
-          "result": "Active connections climb after each payment-provider timeout; idle connections never recover.",
+          "result": "결제 제공자 타임아웃이 발생할 때마다 활성 연결이 증가하고 유휴 연결은 회복되지 않습니다.",
           "effect": {
             "minutes": 3
           },
@@ -86,17 +86,17 @@
     },
     {
       "id": "evidence",
-      "text": "The first evidence narrows the fault domain.",
+      "text": "첫 번째 증거로 장애 범위가 좁혀졌습니다.",
       "observations": [
-        "Active connections climb after each payment-provider timeout; idle connections never recover."
+        "결제 제공자 타임아웃이 발생할 때마다 활성 연결이 증가하고 유휴 연결은 회복되지 않습니다."
       ],
       "actions": [
         {
           "id": "deeper",
-          "label": "Trace timeout path",
+          "label": "타임아웃 코드 경로 추적",
           "type": "INVESTIGATE",
           "nextNode": "cause",
-          "result": "A missing finally/try-with-resources path leaves connections checked out.",
+          "result": "finally 또는 try-with-resources가 누락된 경로에서 연결이 반환되지 않습니다.",
           "effect": {
             "minutes": 2,
             "flags": {
@@ -110,10 +110,10 @@
         },
         {
           "id": "guess-fix",
-          "label": "Patch resource cleanup without verification",
+          "label": "검증 없이 리소스 정리 코드 패치",
           "type": "CHANGE",
           "nextNode": "failed",
-          "result": "The unverified change creates risk and the incident is escalated after the recovery window expires.",
+          "result": "검증되지 않은 변경으로 위험이 커졌고 복구 가능 시간이 지나 인시던트가 에스컬레이션됩니다.",
           "effect": {
             "minutes": 8
           },
@@ -126,17 +126,17 @@
     },
     {
       "id": "cause",
-      "text": "Evidence now supports a specific root cause.",
+      "text": "수집한 증거가 구체적인 근본 원인을 가리킵니다.",
       "observations": [
-        "A missing finally/try-with-resources path leaves connections checked out."
+        "finally 또는 try-with-resources가 누락된 경로에서 연결이 반환되지 않습니다."
       ],
       "actions": [
         {
           "id": "fix",
-          "label": "Patch resource cleanup",
+          "label": "리소스 정리 코드 패치",
           "type": "MITIGATE",
           "nextNode": "resolved",
-          "result": "The guarded cleanup is deployed. Pool usage returns to baseline and checkout recovers.",
+          "result": "안전한 리소스 정리 패치가 배포되었습니다. 풀 사용량이 기준치로 돌아오고 결제가 복구됩니다.",
           "effect": {
             "minutes": 3
           },
@@ -150,29 +150,29 @@
     },
     {
       "id": "resolved",
-      "text": "Service indicators remain healthy through the observation window.",
+      "text": "관찰 시간 동안 서비스 지표가 정상 상태를 유지합니다.",
       "observations": [
-        "The guarded cleanup is deployed. Pool usage returns to baseline and checkout recovers."
+        "안전한 리소스 정리 패치가 배포되었습니다. 풀 사용량이 기준치로 돌아오고 결제가 복구됩니다."
       ],
       "actions": [],
       "terminal": "RESOLVED"
     },
     {
       "id": "failed",
-      "text": "The response window closes with customer impact unresolved.",
+      "text": "사용자 영향을 해결하지 못한 채 대응 시간이 종료됩니다.",
       "observations": [
-        "The incident is handed to the next response team."
+        "인시던트가 다음 대응 팀으로 인계됩니다."
       ],
       "actions": [],
       "terminal": "FAILED"
     }
   ],
-  "rootCause": "An exception path failed to close database connections, steadily exhausting the HikariCP pool.",
+  "rootCause": "예외 처리 경로에서 데이터베이스 연결을 닫지 않아 HikariCP 풀이 지속적으로 고갈되었습니다.",
   "review": {
-    "explanation": "An exception path failed to close database connections, steadily exhausting the HikariCP pool.",
+    "explanation": "예외 처리 경로에서 데이터베이스 연결을 닫지 않아 HikariCP 풀이 지속적으로 고갈되었습니다.",
     "learningNotes": [
-      "Use evidence to narrow the fault domain before changing production.",
-      "Temporary symptom relief is not the same as removing a root cause."
+      "운영 환경을 변경하기 전에 증거를 통해 장애 범위를 좁히세요.",
+      "일시적인 증상 완화와 근본 원인 제거는 다릅니다."
     ]
   }
 }

@@ -2,7 +2,7 @@
 
 > A few minutes. One incident. Your call.
 
-IdleQuest is a mobile-first incident-response simulation—not a quiz. Investigate symptoms, make operational decisions, experience believable consequences, and review the root cause. v0.1 ships five branching incidents and stores recent results only in the browser.
+IdleQuest is a Korean-first, mobile-first incident-response simulation—not a quiz. Investigate symptoms, make operational decisions, experience believable consequences, and review the root cause. v0.1 ships five branching incidents and stores recent results only in the browser.
 
 ## Screenshot
 

@@ -22,3 +22,7 @@ PR deployments intentionally share one preview environment, so the most recently
 Because this repository was bootstrapped in an environment where npm registry access is blocked, dependency versions are exact and automation currently uses `npm install`. Generating and committing `package-lock.json`, then returning automation to `npm ci`, remains a release-hardening task.
 
 The same verified container delivery also runs for merges to `main` and manual dispatches. Event-aware immutable tags use `pr-<number>-<sha>` for pull requests and `main-<sha>` for merged releases. This ensures resolving a PR conflict by merging does not leave the public container pinned to the last preview build.
+
+## Localization
+
+The v0.1 player experience is Korean-first. Player-visible UI labels and authored scenario prose are stored in Korean, while stable engine identifiers, action enums, skill IDs, and scenario IDs remain English to preserve schema compatibility and future content tooling. Existing history entries resolve their display title from the current scenario catalog when possible, so localization does not require a persistence migration.

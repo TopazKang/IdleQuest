@@ -1,1 +1,17 @@
-{"name":"IdleQuest","short_name":"IdleQuest","description":"Mobile incident response simulation","start_url":"./","display":"standalone","background_color":"#08101d","theme_color":"#0b1220","icons":[{"src":"icons/icon.svg","sizes":"any","type":"image/svg+xml","purpose":"any maskable"}]}
+{
+  "name": "IdleQuest",
+  "short_name": "IdleQuest",
+  "description": "모바일 인시던트 대응 시뮬레이션",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#08101d",
+  "theme_color": "#0b1220",
+  "icons": [
+    {
+      "src": "icons/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

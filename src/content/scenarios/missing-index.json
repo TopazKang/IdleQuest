@@ -1,8 +1,8 @@
 {
   "id": "missing-index",
   "version": 1,
-  "title": "Slow Order API",
-  "description": "Order API latency rose from 180 ms to 4.2 s. Error rate is stable and there was no deploy.",
+  "title": "느려진 주문 API",
+  "description": "주문 API 지연 시간이 180ms에서 4.2초로 증가했습니다. 오류율은 안정적이며 최근 배포는 없습니다.",
   "category": "DATABASE",
   "difficulty": 2,
   "estimatedMinutes": 8,
@@ -19,18 +19,18 @@
   "nodes": [
     {
       "id": "triage",
-      "text": "Order API latency rose from 180 ms to 4.2 s. Error rate is stable and there was no deploy.",
+      "text": "주문 API 지연 시간이 180ms에서 4.2초로 증가했습니다. 오류율은 안정적이며 최근 배포는 없습니다.",
       "observations": [
-        "Production impact is active.",
-        "Monitoring data is incomplete."
+        "현재 운영 환경에 사용자 영향이 발생하고 있습니다.",
+        "모니터링 데이터가 완전하지 않습니다."
       ],
       "actions": [
         {
           "id": "investigate",
-          "label": "Inspect slow queries",
+          "label": "느린 쿼리 확인",
           "type": "INVESTIGATE",
           "nextNode": "evidence",
-          "result": "One SELECT averages 3.8 seconds and accounts for most database time.",
+          "result": "SELECT 쿼리 하나의 평균 실행 시간이 3.8초이며 데이터베이스 처리 시간 대부분을 차지합니다.",
           "effect": {
             "minutes": 2,
             "flags": {
@@ -44,10 +44,10 @@
         },
         {
           "id": "risky",
-          "label": "Restart application",
+          "label": "애플리케이션 재시작",
           "type": "CHANGE",
           "nextNode": "after-risk",
-          "result": "Queues clear and latency drops briefly. Four minutes later it reaches 5.1 s; 17 sessions were disconnected.",
+          "result": "대기열이 비워져 지연 시간이 잠시 감소합니다. 4분 뒤 5.1초까지 다시 증가했고 세션 17개가 끊겼습니다.",
           "effect": {
             "minutes": 4,
             "impact": {
@@ -63,18 +63,18 @@
     },
     {
       "id": "after-risk",
-      "text": "The incident continues. Temporary relief did not address the underlying cause.",
+      "text": "인시던트가 계속되고 있습니다. 일시적인 완화로 근본 원인은 해결되지 않았습니다.",
       "observations": [
-        "Queues clear and latency drops briefly. Four minutes later it reaches 5.1 s; 17 sessions were disconnected.",
-        "The team still needs a diagnosis."
+        "대기열이 비워져 지연 시간이 잠시 감소합니다. 4분 뒤 5.1초까지 다시 증가했고 세션 17개가 끊겼습니다.",
+        "팀은 여전히 원인을 진단해야 합니다."
       ],
       "actions": [
         {
           "id": "recover-investigate",
-          "label": "Inspect slow queries",
+          "label": "느린 쿼리 확인",
           "type": "INVESTIGATE",
           "nextNode": "evidence",
-          "result": "One SELECT averages 3.8 seconds and accounts for most database time.",
+          "result": "SELECT 쿼리 하나의 평균 실행 시간이 3.8초이며 데이터베이스 처리 시간 대부분을 차지합니다.",
           "effect": {
             "minutes": 3
           },
@@ -86,17 +86,17 @@
     },
     {
       "id": "evidence",
-      "text": "The first evidence narrows the fault domain.",
+      "text": "첫 번째 증거로 장애 범위가 좁혀졌습니다.",
       "observations": [
-        "One SELECT averages 3.8 seconds and accounts for most database time."
+        "SELECT 쿼리 하나의 평균 실행 시간이 3.8초이며 데이터베이스 처리 시간 대부분을 차지합니다."
       ],
       "actions": [
         {
           "id": "deeper",
-          "label": "Examine execution plan",
+          "label": "실행 계획 분석",
           "type": "INVESTIGATE",
           "nextNode": "cause",
-          "result": "The plan shows a full scan of ORDER_ITEM; estimated and actual rows diverge sharply.",
+          "result": "실행 계획에서 ORDER_ITEM 전체 스캔이 확인되며 예상 행 수와 실제 행 수가 크게 다릅니다.",
           "effect": {
             "minutes": 2,
             "flags": {
@@ -110,10 +110,10 @@
         },
         {
           "id": "guess-fix",
-          "label": "Create the reviewed index without verification",
+          "label": "검증 없이 검토된 인덱스 생성",
           "type": "CHANGE",
           "nextNode": "failed",
-          "result": "The unverified change creates risk and the incident is escalated after the recovery window expires.",
+          "result": "검증되지 않은 변경으로 위험이 커졌고 복구 가능 시간이 지나 인시던트가 에스컬레이션됩니다.",
           "effect": {
             "minutes": 8
           },
@@ -126,17 +126,17 @@
     },
     {
       "id": "cause",
-      "text": "Evidence now supports a specific root cause.",
+      "text": "수집한 증거가 구체적인 근본 원인을 가리킵니다.",
       "observations": [
-        "The plan shows a full scan of ORDER_ITEM; estimated and actual rows diverge sharply."
+        "실행 계획에서 ORDER_ITEM 전체 스캔이 확인되며 예상 행 수와 실제 행 수가 크게 다릅니다."
       ],
       "actions": [
         {
           "id": "fix",
-          "label": "Create the reviewed index",
+          "label": "검토된 인덱스 생성",
           "type": "MITIGATE",
           "nextNode": "resolved",
-          "result": "The online index build completes. Latency settles at 190 ms without errors.",
+          "result": "온라인 인덱스 생성이 완료되었습니다. 오류 없이 지연 시간이 190ms로 안정됩니다.",
           "effect": {
             "minutes": 3
           },
@@ -150,29 +150,29 @@
     },
     {
       "id": "resolved",
-      "text": "Service indicators remain healthy through the observation window.",
+      "text": "관찰 시간 동안 서비스 지표가 정상 상태를 유지합니다.",
       "observations": [
-        "The online index build completes. Latency settles at 190 ms without errors."
+        "온라인 인덱스 생성이 완료되었습니다. 오류 없이 지연 시간이 190ms로 안정됩니다."
       ],
       "actions": [],
       "terminal": "RESOLVED"
     },
     {
       "id": "failed",
-      "text": "The response window closes with customer impact unresolved.",
+      "text": "사용자 영향을 해결하지 못한 채 대응 시간이 종료됩니다.",
       "observations": [
-        "The incident is handed to the next response team."
+        "인시던트가 다음 대응 팀으로 인계됩니다."
       ],
       "actions": [],
       "terminal": "FAILED"
     }
   ],
-  "rootCause": "An unusable index on ORDER_ITEM.ORDER_ID caused full table scans as data grew.",
+  "rootCause": "ORDER_ITEM.ORDER_ID에 사용할 수 있는 인덱스가 없어 데이터 증가에 따라 전체 테이블 스캔 비용이 커졌습니다.",
   "review": {
-    "explanation": "An unusable index on ORDER_ITEM.ORDER_ID caused full table scans as data grew.",
+    "explanation": "ORDER_ITEM.ORDER_ID에 사용할 수 있는 인덱스가 없어 데이터 증가에 따라 전체 테이블 스캔 비용이 커졌습니다.",
     "learningNotes": [
-      "Use evidence to narrow the fault domain before changing production.",
-      "Temporary symptom relief is not the same as removing a root cause."
+      "운영 환경을 변경하기 전에 증거를 통해 장애 범위를 좁히세요.",
+      "일시적인 증상 완화와 근본 원인 제거는 다릅니다."
     ]
   }
 }

@@ -1,8 +1,8 @@
 {
   "id": "disk-restart",
   "version": 1,
-  "title": "Container Restart Loop",
-  "description": "The report worker restarts every 40 seconds. Its last health check fails before exit.",
+  "title": "컨테이너 재시작 루프",
+  "description": "리포트 워커가 40초마다 재시작됩니다. 종료 직전의 마지막 상태 확인도 실패합니다.",
   "category": "PLATFORM",
   "difficulty": 2,
   "estimatedMinutes": 8,
@@ -19,18 +19,18 @@
   "nodes": [
     {
       "id": "triage",
-      "text": "The report worker restarts every 40 seconds. Its last health check fails before exit.",
+      "text": "리포트 워커가 40초마다 재시작됩니다. 종료 직전의 마지막 상태 확인도 실패합니다.",
       "observations": [
-        "Production impact is active.",
-        "Monitoring data is incomplete."
+        "현재 운영 환경에 사용자 영향이 발생하고 있습니다.",
+        "모니터링 데이터가 완전하지 않습니다."
       ],
       "actions": [
         {
           "id": "investigate",
-          "label": "Check host resources",
+          "label": "호스트 리소스 확인",
           "type": "INVESTIGATE",
           "nextNode": "evidence",
-          "result": "The Docker volume is 100% full; CPU and memory remain normal.",
+          "result": "Docker 볼륨 사용률이 100%입니다. CPU와 메모리는 정상 범위입니다.",
           "effect": {
             "minutes": 2,
             "flags": {
@@ -44,10 +44,10 @@
         },
         {
           "id": "risky",
-          "label": "Restart container",
+          "label": "컨테이너 재시작",
           "type": "CHANGE",
           "nextNode": "after-risk",
-          "result": "It starts once, cannot write its checkpoint, and enters the restart loop again.",
+          "result": "한 번은 시작되지만 체크포인트를 기록하지 못해 다시 재시작 루프에 빠집니다.",
           "effect": {
             "minutes": 4,
             "impact": {
@@ -63,18 +63,18 @@
     },
     {
       "id": "after-risk",
-      "text": "The incident continues. Temporary relief did not address the underlying cause.",
+      "text": "인시던트가 계속되고 있습니다. 일시적인 완화로 근본 원인은 해결되지 않았습니다.",
       "observations": [
-        "It starts once, cannot write its checkpoint, and enters the restart loop again.",
-        "The team still needs a diagnosis."
+        "한 번은 시작되지만 체크포인트를 기록하지 못해 다시 재시작 루프에 빠집니다.",
+        "팀은 여전히 원인을 진단해야 합니다."
       ],
       "actions": [
         {
           "id": "recover-investigate",
-          "label": "Check host resources",
+          "label": "호스트 리소스 확인",
           "type": "INVESTIGATE",
           "nextNode": "evidence",
-          "result": "The Docker volume is 100% full; CPU and memory remain normal.",
+          "result": "Docker 볼륨 사용률이 100%입니다. CPU와 메모리는 정상 범위입니다.",
           "effect": {
             "minutes": 3
           },
@@ -86,17 +86,17 @@
     },
     {
       "id": "evidence",
-      "text": "The first evidence narrows the fault domain.",
+      "text": "첫 번째 증거로 장애 범위가 좁혀졌습니다.",
       "observations": [
-        "The Docker volume is 100% full; CPU and memory remain normal."
+        "Docker 볼륨 사용률이 100%입니다. CPU와 메모리는 정상 범위입니다."
       ],
       "actions": [
         {
           "id": "deeper",
-          "label": "Inspect disk usage",
+          "label": "디스크 사용량 분석",
           "type": "INVESTIGATE",
           "nextNode": "cause",
-          "result": "A verbose debug log occupies 91 GB and continues growing.",
+          "result": "상세 디버그 로그가 91GB를 차지하고 있으며 계속 증가하고 있습니다.",
           "effect": {
             "minutes": 2,
             "flags": {
@@ -110,10 +110,10 @@
         },
         {
           "id": "guess-fix",
-          "label": "Rotate logs and cap retention without verification",
+          "label": "검증 없이 로그 순환 및 보존 제한 적용",
           "type": "CHANGE",
           "nextNode": "failed",
-          "result": "The unverified change creates risk and the incident is escalated after the recovery window expires.",
+          "result": "검증되지 않은 변경으로 위험이 커졌고 복구 가능 시간이 지나 인시던트가 에스컬레이션됩니다.",
           "effect": {
             "minutes": 8
           },
@@ -126,17 +126,17 @@
     },
     {
       "id": "cause",
-      "text": "Evidence now supports a specific root cause.",
+      "text": "수집한 증거가 구체적인 근본 원인을 가리킵니다.",
       "observations": [
-        "A verbose debug log occupies 91 GB and continues growing."
+        "상세 디버그 로그가 91GB를 차지하고 있으며 계속 증가하고 있습니다."
       ],
       "actions": [
         {
           "id": "fix",
-          "label": "Rotate logs and cap retention",
+          "label": "로그 순환 및 보존 제한 적용",
           "type": "MITIGATE",
           "nextNode": "resolved",
-          "result": "Space is recovered, retention is enforced, and the worker stays healthy.",
+          "result": "디스크 공간이 확보되고 보존 제한이 적용되었습니다. 워커는 계속 정상 상태를 유지합니다.",
           "effect": {
             "minutes": 3
           },
@@ -150,29 +150,29 @@
     },
     {
       "id": "resolved",
-      "text": "Service indicators remain healthy through the observation window.",
+      "text": "관찰 시간 동안 서비스 지표가 정상 상태를 유지합니다.",
       "observations": [
-        "Space is recovered, retention is enforced, and the worker stays healthy."
+        "디스크 공간이 확보되고 보존 제한이 적용되었습니다. 워커는 계속 정상 상태를 유지합니다."
       ],
       "actions": [],
       "terminal": "RESOLVED"
     },
     {
       "id": "failed",
-      "text": "The response window closes with customer impact unresolved.",
+      "text": "사용자 영향을 해결하지 못한 채 대응 시간이 종료됩니다.",
       "observations": [
-        "The incident is handed to the next response team."
+        "인시던트가 다음 대응 팀으로 인계됩니다."
       ],
       "actions": [],
       "terminal": "FAILED"
     }
   ],
-  "rootCause": "A runaway debug log filled the container host disk, preventing the worker from writing checkpoints.",
+  "rootCause": "제어되지 않은 디버그 로그가 컨테이너 호스트 디스크를 가득 채워 워커가 체크포인트를 기록하지 못했습니다.",
   "review": {
-    "explanation": "A runaway debug log filled the container host disk, preventing the worker from writing checkpoints.",
+    "explanation": "제어되지 않은 디버그 로그가 컨테이너 호스트 디스크를 가득 채워 워커가 체크포인트를 기록하지 못했습니다.",
     "learningNotes": [
-      "Use evidence to narrow the fault domain before changing production.",
-      "Temporary symptom relief is not the same as removing a root cause."
+      "운영 환경을 변경하기 전에 증거를 통해 장애 범위를 좁히세요.",
+      "일시적인 증상 완화와 근본 원인 제거는 다릅니다."
     ]
   }
 }
