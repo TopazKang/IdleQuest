@@ -20,3 +20,5 @@ Pull requests now use a three-stage pipeline. GitHub-hosted runners verify the a
 PR deployments intentionally share one preview environment, so the most recently completed PR replaces the prior preview. Workflow concurrency cancels older runs to reduce stale deployment races. The self-hosted runner must have Docker Engine, Compose v2, and outbound GHCR access; it does not build application code.
 
 Because this repository was bootstrapped in an environment where npm registry access is blocked, dependency versions are exact and automation currently uses `npm install`. Generating and committing `package-lock.json`, then returning automation to `npm ci`, remains a release-hardening task.
+
+The same verified container delivery also runs for merges to `main` and manual dispatches. Event-aware immutable tags use `pr-<number>-<sha>` for pull requests and `main-<sha>` for merged releases. This ensures resolving a PR conflict by merging does not leave the public container pinned to the last preview build.

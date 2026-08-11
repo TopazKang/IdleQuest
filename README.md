@@ -47,3 +47,5 @@ For a manual server rollback, set `IDLEQUEST_IMAGE` to an earlier GHCR tag and r
 ```bash
 IDLEQUEST_IMAGE=ghcr.io/owner/idlequest:pr-123-<sha> docker compose up -d
 ```
+
+Merges to `main` and manual workflow dispatches use the same verified delivery path with a `main-<sha>` image tag, so the public container is refreshed after merge as well as during PR preview.
