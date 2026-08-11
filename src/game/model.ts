@@ -1,0 +1,10 @@
+export const actionTypes=['INVESTIGATE','MITIGATE','CHANGE','RESTART','ROLLBACK','KILL','WAIT','ESCALATE'] as const;
+export type ActionType=typeof actionTypes[number];
+export type Scores={diagnosis:number;safety:number;efficiency:number;understanding:number};
+export type Effect={minutes?:number;metrics?:Record<string,number>;impact?:Record<string,number>;flags?:Record<string,boolean>};
+export type Action={id:string;label:string;type:ActionType;nextNode:string;result:string;effect?:Effect;score?:Partial<Scores>};
+export type Node={id:string;text:string;observations:string[];actions:Action[];terminal?:'RESOLVED'|'FAILED'};
+export type Scenario={id:string;version:number;title:string;description:string;category:string;difficulty:1|2|3|4|5;estimatedMinutes:number;skills:string[];environment:string[];startNode:string;nodes:Node[];rootCause:string;review:{explanation:string;learningNotes:string[]}};
+export type TimelineItem={minute:number;label:string;type?:ActionType};
+export type Run={runId:string;scenarioId:string;currentNode:string;status:'ACTIVE'|'RESOLVED'|'FAILED';elapsedGameTime:number;actions:string[];timeline:TimelineItem[];flags:Record<string,boolean>;metrics:Record<string,number>;impact:Record<string,number>;scores:Scores};
+export type HistoryEntry={scenarioId:string;title:string;date:string;result:'RESOLVED'|'FAILED';score:number;duration:number;actions:number;skills:string[]};
