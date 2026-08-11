@@ -1,4 +1,4 @@
-import {Action,Run,Scenario,Scores} from './model';
+import {Run,Scenario,Scores} from './model';
 const clamp=(n:number)=>Math.max(0,Math.min(100,n));
 export function startRun(s:Scenario,id:string=crypto.randomUUID()):Run{return{runId:id,scenarioId:s.id,currentNode:s.startNode,status:'ACTIVE',elapsedGameTime:0,actions:[],timeline:[{minute:0,label:'Incident detected'}],flags:{},metrics:{},impact:{},scores:{diagnosis:50,safety:70,efficiency:70,understanding:40}}}
 export function currentNode(s:Scenario,r:Run){const n=s.nodes.find(n=>n.id===r.currentNode);if(!n)throw new Error('Run points to an unknown node');return n}

@@ -30,3 +30,20 @@ GitHub Actions validates pull requests. Pushes to `main` build and deploy the `o
 ## Status
 
 MVP v0.1: playable random runs, five incidents, review/scoring, local history, PWA basics, tests, validation, and static Pages deployment. See the [roadmap](docs/roadmap.md).
+
+## Container preview deployment
+
+Each pull request to `main` triggers `.github/workflows/ci.yml`:
+
+1. a GitHub-hosted runner runs every quality gate;
+2. it builds the static export into an Nginx image and pushes an immutable PR/SHA tag to GHCR;
+3. the Linux self-hosted runner pulls that image and runs `docker compose up -d`;
+4. the workflow verifies `http://127.0.0.1:6745/`.
+
+The Compose service binds only to loopback at port `6745`. The host-managed Cloudflare Tunnel is responsible for exposing `https://quest.topazkang.com`; Cloudflare credentials are never stored in this repository. The self-hosted runner requires Docker Engine and Compose v2. The repository workflow needs `packages: write`, and the runner account needs permission to control Docker.
+
+For a manual server rollback, set `IDLEQUEST_IMAGE` to an earlier GHCR tag and reconcile Compose:
+
+```bash
+IDLEQUEST_IMAGE=ghcr.io/owner/idlequest:pr-123-<sha> docker compose up -d
+```
