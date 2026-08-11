@@ -1,0 +1,7 @@
+services:
+  idlequest:
+    image: ${IDLEQUEST_IMAGE:?Set IDLEQUEST_IMAGE to the GHCR image reference}
+    container_name: idlequest
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:6745:80"

@@ -1,0 +1,1 @@
+import fs from 'node:fs';import path from 'node:path';import {validateScenarios} from '../src/game/validation';const dir=path.join(process.cwd(),'src/content/scenarios');const files=fs.readdirSync(dir).filter(f=>f.endsWith('.json'));validateScenarios(files.map(f=>JSON.parse(fs.readFileSync(path.join(dir,f),'utf8'))));console.log(`Validated ${files.length} scenarios.`);
