@@ -1,0 +1,1 @@
+'use client';import {useEffect} from 'react';export function ServiceWorker(){useEffect(()=>{if('serviceWorker'in navigator)navigator.serviceWorker.register(`${location.pathname.split('/').slice(0,-1).join('/')}/sw.js`).catch(()=>undefined)},[]);return null}

@@ -1,0 +1,178 @@
+{
+  "id": "connection-leak",
+  "version": 1,
+  "title": "결제 DB 커넥션 풀 고갈",
+  "description": "결제 요청이 타임아웃됩니다. 인스턴스는 정상이지만 활성 DB 연결 수가 설정 한도에 도달했습니다.",
+  "category": "BACKEND",
+  "difficulty": 2,
+  "estimatedMinutes": 8,
+  "skills": [
+    "BACKEND",
+    "DATABASE",
+    "SPRING"
+  ],
+  "environment": [
+    "Spring Boot",
+    "MySQL"
+  ],
+  "startNode": "triage",
+  "nodes": [
+    {
+      "id": "triage",
+      "text": "결제 요청이 타임아웃됩니다. 인스턴스는 정상이지만 활성 DB 연결 수가 설정 한도에 도달했습니다.",
+      "observations": [
+        "현재 운영 환경에 사용자 영향이 발생하고 있습니다.",
+        "모니터링 데이터가 완전하지 않습니다."
+      ],
+      "actions": [
+        {
+          "id": "investigate",
+          "label": "커넥션 풀 지표 확인",
+          "type": "INVESTIGATE",
+          "nextNode": "evidence",
+          "result": "결제 제공자 타임아웃이 발생할 때마다 활성 연결이 증가하고 유휴 연결은 회복되지 않습니다.",
+          "effect": {
+            "minutes": 2,
+            "flags": {
+              "primaryEvidence": true
+            }
+          },
+          "score": {
+            "diagnosis": 15,
+            "efficiency": 8
+          }
+        },
+        {
+          "id": "risky",
+          "label": "커넥션 풀 크기 증가",
+          "type": "CHANGE",
+          "nextNode": "after-risk",
+          "result": "타임아웃이 잠시 멈췄지만 더 커진 풀도 곧 고갈되고 데이터베이스 메모리 압력이 상승합니다.",
+          "effect": {
+            "minutes": 4,
+            "impact": {
+              "affectedUsers": 17
+            }
+          },
+          "score": {
+            "safety": -25,
+            "efficiency": -12
+          }
+        }
+      ]
+    },
+    {
+      "id": "after-risk",
+      "text": "인시던트가 계속되고 있습니다. 일시적인 완화로 근본 원인은 해결되지 않았습니다.",
+      "observations": [
+        "타임아웃이 잠시 멈췄지만 더 커진 풀도 곧 고갈되고 데이터베이스 메모리 압력이 상승합니다.",
+        "팀은 여전히 원인을 진단해야 합니다."
+      ],
+      "actions": [
+        {
+          "id": "recover-investigate",
+          "label": "커넥션 풀 지표 확인",
+          "type": "INVESTIGATE",
+          "nextNode": "evidence",
+          "result": "결제 제공자 타임아웃이 발생할 때마다 활성 연결이 증가하고 유휴 연결은 회복되지 않습니다.",
+          "effect": {
+            "minutes": 3
+          },
+          "score": {
+            "diagnosis": 10
+          }
+        }
+      ]
+    },
+    {
+      "id": "evidence",
+      "text": "첫 번째 증거로 장애 범위가 좁혀졌습니다.",
+      "observations": [
+        "결제 제공자 타임아웃이 발생할 때마다 활성 연결이 증가하고 유휴 연결은 회복되지 않습니다."
+      ],
+      "actions": [
+        {
+          "id": "deeper",
+          "label": "타임아웃 코드 경로 추적",
+          "type": "INVESTIGATE",
+          "nextNode": "cause",
+          "result": "finally 또는 try-with-resources가 누락된 경로에서 연결이 반환되지 않습니다.",
+          "effect": {
+            "minutes": 2,
+            "flags": {
+              "causeIdentified": true
+            }
+          },
+          "score": {
+            "diagnosis": 20,
+            "understanding": 25
+          }
+        },
+        {
+          "id": "guess-fix",
+          "label": "검증 없이 리소스 정리 코드 패치",
+          "type": "CHANGE",
+          "nextNode": "failed",
+          "result": "검증되지 않은 변경으로 위험이 커졌고 복구 가능 시간이 지나 인시던트가 에스컬레이션됩니다.",
+          "effect": {
+            "minutes": 8
+          },
+          "score": {
+            "safety": -30,
+            "understanding": -15
+          }
+        }
+      ]
+    },
+    {
+      "id": "cause",
+      "text": "수집한 증거가 구체적인 근본 원인을 가리킵니다.",
+      "observations": [
+        "finally 또는 try-with-resources가 누락된 경로에서 연결이 반환되지 않습니다."
+      ],
+      "actions": [
+        {
+          "id": "fix",
+          "label": "리소스 정리 코드 패치",
+          "type": "MITIGATE",
+          "nextNode": "resolved",
+          "result": "안전한 리소스 정리 패치가 배포되었습니다. 풀 사용량이 기준치로 돌아오고 결제가 복구됩니다.",
+          "effect": {
+            "minutes": 3
+          },
+          "score": {
+            "safety": 15,
+            "efficiency": 12,
+            "understanding": 25
+          }
+        }
+      ]
+    },
+    {
+      "id": "resolved",
+      "text": "관찰 시간 동안 서비스 지표가 정상 상태를 유지합니다.",
+      "observations": [
+        "안전한 리소스 정리 패치가 배포되었습니다. 풀 사용량이 기준치로 돌아오고 결제가 복구됩니다."
+      ],
+      "actions": [],
+      "terminal": "RESOLVED"
+    },
+    {
+      "id": "failed",
+      "text": "사용자 영향을 해결하지 못한 채 대응 시간이 종료됩니다.",
+      "observations": [
+        "인시던트가 다음 대응 팀으로 인계됩니다."
+      ],
+      "actions": [],
+      "terminal": "FAILED"
+    }
+  ],
+  "rootCause": "예외 처리 경로에서 데이터베이스 연결을 닫지 않아 HikariCP 풀이 지속적으로 고갈되었습니다.",
+  "review": {
+    "explanation": "예외 처리 경로에서 데이터베이스 연결을 닫지 않아 HikariCP 풀이 지속적으로 고갈되었습니다.",
+    "learningNotes": [
+      "운영 환경을 변경하기 전에 증거를 통해 장애 범위를 좁히세요.",
+      "일시적인 증상 완화와 근본 원인 제거는 다릅니다."
+    ]
+  }
+}

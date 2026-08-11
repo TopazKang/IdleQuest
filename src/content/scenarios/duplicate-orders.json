@@ -1,0 +1,178 @@
+{
+  "id": "duplicate-orders",
+  "version": 1,
+  "title": "중복 주문 레코드",
+  "description": "일부 모바일 재시도 요청에서 동일한 클라이언트 요청 ID를 가진 주문이 두 건 생성됩니다.",
+  "category": "CONCURRENCY",
+  "difficulty": 3,
+  "estimatedMinutes": 8,
+  "skills": [
+    "BACKEND",
+    "DATABASE",
+    "CONCURRENCY"
+  ],
+  "environment": [
+    "Java",
+    "PostgreSQL"
+  ],
+  "startNode": "triage",
+  "nodes": [
+    {
+      "id": "triage",
+      "text": "일부 모바일 재시도 요청에서 동일한 클라이언트 요청 ID를 가진 주문이 두 건 생성됩니다.",
+      "observations": [
+        "현재 운영 환경에 사용자 영향이 발생하고 있습니다.",
+        "모니터링 데이터가 완전하지 않습니다."
+      ],
+      "actions": [
+        {
+          "id": "investigate",
+          "label": "요청 추적 비교",
+          "type": "INVESTIGATE",
+          "nextNode": "evidence",
+          "result": "중복 주문은 동일한 요청 ID를 사용하며 서로 다른 인스턴스에서 수 밀리초 간격으로 겹칩니다.",
+          "effect": {
+            "minutes": 2,
+            "flags": {
+              "primaryEvidence": true
+            }
+          },
+          "score": {
+            "diagnosis": 15,
+            "efficiency": 8
+          }
+        },
+        {
+          "id": "risky",
+          "label": "클라이언트 재시도 비활성화",
+          "type": "CHANGE",
+          "nextNode": "after-risk",
+          "result": "중복은 감소했지만 일시적 실패가 주문 유실로 이어지고 서버 측 경쟁 상태도 남아 있습니다.",
+          "effect": {
+            "minutes": 4,
+            "impact": {
+              "affectedUsers": 17
+            }
+          },
+          "score": {
+            "safety": -25,
+            "efficiency": -12
+          }
+        }
+      ]
+    },
+    {
+      "id": "after-risk",
+      "text": "인시던트가 계속되고 있습니다. 일시적인 완화로 근본 원인은 해결되지 않았습니다.",
+      "observations": [
+        "중복은 감소했지만 일시적 실패가 주문 유실로 이어지고 서버 측 경쟁 상태도 남아 있습니다.",
+        "팀은 여전히 원인을 진단해야 합니다."
+      ],
+      "actions": [
+        {
+          "id": "recover-investigate",
+          "label": "요청 추적 비교",
+          "type": "INVESTIGATE",
+          "nextNode": "evidence",
+          "result": "중복 주문은 동일한 요청 ID를 사용하며 서로 다른 인스턴스에서 수 밀리초 간격으로 겹칩니다.",
+          "effect": {
+            "minutes": 3
+          },
+          "score": {
+            "diagnosis": 10
+          }
+        }
+      ]
+    },
+    {
+      "id": "evidence",
+      "text": "첫 번째 증거로 장애 범위가 좁혀졌습니다.",
+      "observations": [
+        "중복 주문은 동일한 요청 ID를 사용하며 서로 다른 인스턴스에서 수 밀리초 간격으로 겹칩니다."
+      ],
+      "actions": [
+        {
+          "id": "deeper",
+          "label": "트랜잭션 로직 확인",
+          "type": "INVESTIGATE",
+          "nextNode": "cause",
+          "result": "두 트랜잭션 모두 상대 INSERT가 커밋되기 전에 레코드가 없다고 판단합니다. 고유 제약 조건도 없습니다.",
+          "effect": {
+            "minutes": 2,
+            "flags": {
+              "causeIdentified": true
+            }
+          },
+          "score": {
+            "diagnosis": 20,
+            "understanding": 25
+          }
+        },
+        {
+          "id": "guess-fix",
+          "label": "검증 없이 멱등성 제약 조건 추가",
+          "type": "CHANGE",
+          "nextNode": "failed",
+          "result": "검증되지 않은 변경으로 위험이 커졌고 복구 가능 시간이 지나 인시던트가 에스컬레이션됩니다.",
+          "effect": {
+            "minutes": 8
+          },
+          "score": {
+            "safety": -30,
+            "understanding": -15
+          }
+        }
+      ]
+    },
+    {
+      "id": "cause",
+      "text": "수집한 증거가 구체적인 근본 원인을 가리킵니다.",
+      "observations": [
+        "두 트랜잭션 모두 상대 INSERT가 커밋되기 전에 레코드가 없다고 판단합니다. 고유 제약 조건도 없습니다."
+      ],
+      "actions": [
+        {
+          "id": "fix",
+          "label": "멱등성 제약 조건 추가",
+          "type": "MITIGATE",
+          "nextNode": "resolved",
+          "result": "고유 제약 조건과 충돌 처리를 적용하자 동시 재시도 요청이 기존 주문을 반환합니다.",
+          "effect": {
+            "minutes": 3
+          },
+          "score": {
+            "safety": 15,
+            "efficiency": 12,
+            "understanding": 25
+          }
+        }
+      ]
+    },
+    {
+      "id": "resolved",
+      "text": "관찰 시간 동안 서비스 지표가 정상 상태를 유지합니다.",
+      "observations": [
+        "고유 제약 조건과 충돌 처리를 적용하자 동시 재시도 요청이 기존 주문을 반환합니다."
+      ],
+      "actions": [],
+      "terminal": "RESOLVED"
+    },
+    {
+      "id": "failed",
+      "text": "사용자 영향을 해결하지 못한 채 대응 시간이 종료됩니다.",
+      "observations": [
+        "인시던트가 다음 대응 팀으로 인계됩니다."
+      ],
+      "actions": [],
+      "terminal": "FAILED"
+    }
+  ],
+  "rootCause": "조회 후 삽입하는 경쟁 구간에 고유 멱등성 제약 조건이 없어 동시 재시도가 중복 주문을 커밋할 수 있었습니다.",
+  "review": {
+    "explanation": "조회 후 삽입하는 경쟁 구간에 고유 멱등성 제약 조건이 없어 동시 재시도가 중복 주문을 커밋할 수 있었습니다.",
+    "learningNotes": [
+      "운영 환경을 변경하기 전에 증거를 통해 장애 범위를 좁히세요.",
+      "일시적인 증상 완화와 근본 원인 제거는 다릅니다."
+    ]
+  }
+}
